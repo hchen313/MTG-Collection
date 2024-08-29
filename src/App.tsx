@@ -1,15 +1,29 @@
 import React from 'react';
-//import { Cards } from './Card'; 
-//import { CssBaseline } from '@mui/material'; // css 
-//import { AppBar, Toolbar, Typography } from '@mui/material'; 
-import { Login } from './components/Login'
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Login } from './components/Login';
+import { Dashboard } from './components/Dashboard'
+
 
 const App: React.FC = () => {
   return (
-    <>
-      <Login /> 
-    </>
+      <Router>
+          <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+      </Router>
   );
+};
+
+const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+
+  if (!token) {
+      return <Navigate to="/login" />;
+  }
+
+  return children;
 };
 
 export default App;
