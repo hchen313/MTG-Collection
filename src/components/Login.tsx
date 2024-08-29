@@ -1,5 +1,6 @@
 import React, { useState } from 'react'; 
 import { Avatar, Grid, Paper, TextField, FormControlLabel, Checkbox, Button, Link, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 export const Login = () => {
     const paperStyle = {
@@ -10,33 +11,39 @@ export const Login = () => {
     }
 
     const [username, setUserName] = useState(""); 
-    const [password, setPassword] = useState(""); 
-    const [error, setError] = useState(""); 
+    const [password, setPassword] = useState("");  
+    const [rememberMe, setRememberMe] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
+
+        if (username === "" || password === "") {
+            alert("Please enter username/password"); 
+            return;
+        }
 
         try {
             const response = await fetch("http://localhost:8000/login", {
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({username, password})
+                body: JSON.stringify({username, password, rememberMe})
             }); 
 
             const data = await response.json(); 
             if (data.success) {
-                console.log("success");
+                if (rememberMe) {
+                    sessionStorage.setItem('token', data.token);
+                    localStorage.setItem('token', data.token);
+                } else {
+                    sessionStorage.setItem('token', data.token);
+                }
+                navigate('/dashboard');
             } else {
-                setError(data.message); 
+                alert('Login failed: ' + data.message);
             }
         } catch (error) {
-            setError("An error has occurred, please try again");
-            console.error('Login error', error);  
-        }
-
-        if (error != "") {
-            console.error(error); 
+            alert('An error has occurred: ' + error);
         }
     }
 
@@ -50,10 +57,10 @@ export const Login = () => {
                 <TextField label="Username" placeholder='Enter username' fullWidth required margin='normal' 
                 onChange={(event) => {setUserName(event.target.value)}}> </TextField>
                 <TextField label="Password" placeholder='Enter password' fullWidth required margin='none'
-                onChange={(event) => {setPassword(event.target.value)}}> </TextField>
+                onChange={(event) => {setPassword(event.target.value)}} type='password'> </TextField>
                 <FormControlLabel 
                     control={
-                        <Checkbox name="checkBox" color="primary" />
+                        <Checkbox name="checkBox" color="primary" onChange={(event) => {setRememberMe(event.target.checked)}}/>
                     } 
                     label="Remember me"
                 />
