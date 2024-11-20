@@ -5,50 +5,70 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
-import Avatar from '@mui/material/Avatar';
-import { Box, Card, CardContent, Container, Grid, IconButton, Menu, MenuItem } from '@mui/material';
+import { Box, Card, CardContent, Container, Grid} from '@mui/material';
+import { getCardData } from '../APIQuery';
 
 export const Dashboard: React.FC = () => {
     const [user, setUser] = useState<{ username: string } | null>(null);
-    const [userData, setUserData] = useState<{ data: string } | null>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const navigate = useNavigate();
-    
+    const [numCards, setNumCards] = useState(0)
+    const [value, setValue] = useState(0.0)
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
 
     useEffect(() => {
-        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+        try {
+            const fetchData = async () => {
+                const response = await fetch("http://localhost:8000/inventory", {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({token})
+                }); 
+                
+                const data = await response.json(); 
+                if (data.success) {
+                    let objJson = JSON.parse(data.data)
+                    let obj = Object.keys(objJson)
+                    let count = 0 
+                    let total = 0.0
+                    for (let i = 0; i < obj.length; i++) {
+                        let cardInfo: any = getCardData(obj[i])
+                        let json = JSON.parse(await cardInfo)
+                        count += objJson[json.id].foil
+                        count += objJson[json.id].normal
+                        total += objJson[json.id].foil * (json.prices.usd_foil ? json.prices.usd_foil : 0)
+                        total += objJson[json.id].normal * (json.prices.usd ? json.prices.usd : 0)
+                    }
+                    setNumCards(count)
+                    setValue(total)
+                } else {
+                    throw new Error("failed to fetch inventory")
+                }
+            }
+            fetchData()
+        } catch(err) {
+            alert('An error has occurred: ' + err);
+        }
+    }, [])
+
+    useEffect(() => {
         if (token) {
             const decodedToken: { username: string } = jwtDecode(token);
             setUser(decodedToken);
         }
     }, []);
 
-    useEffect(() => {
-        const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-        if (token) {
-            fetch('http://localhost:8000/user-data', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            })
-            .then(response => response.json())
-            .then(data => setUserData(data))
-            .catch(error => console.error('Error fetching user data:', error));
-        }
-    }, []);
-
     const handleLogout = () => {
         sessionStorage.removeItem('token');
         localStorage.removeItem('token');  
-        navigate('./login');
+        navigate('/login');
     }
 
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    }
-    
-    const handleClose = () => {
-        setAnchorEl(null);
+    const viewInventory = () => {
+        navigate('/inventory')
+    };
+
+    const addCards = () => {
+        navigate('/cards')
     };
 
     const MenuBar: React.FC = () => {
@@ -61,19 +81,6 @@ export const Dashboard: React.FC = () => {
             <Typography variant="h6" component="div" color="#C3BBBB" sx={{ flexGrow: 1 }}>
                 Dashboard
               </Typography>
-              {/* <div>
-                <IconButton onClick={handleClick}> 
-                    <Avatar sx={{width: 36, height:36, bgcolor: "lightblue", mr: 2}}> {user?.username.toUpperCase()[0]} </Avatar>
-                </IconButton>
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleClose}
-                    sx = {{}}
-                >
-                    <MenuItem onClick={handleClose}>View My Inventory</MenuItem>
-                </Menu>
-            </div> */}
               <Button 
                 onClick={handleLogout} 
                 sx={{ 
@@ -99,13 +106,13 @@ export const Dashboard: React.FC = () => {
                     <main>
                         <Container >
                             <Typography variant='h2' align='center' color="#C3BBBB"> Overview </Typography>
-                            {userData != null && 
                             <Typography variant='h6' align='center' color='#C3BBBB'>
                                 {user.username}
-                            </Typography>}
+                            </Typography>
                         </Container> 
                         <div>
                             <Box
+                                marginTop={2}
                                 component="img"
                                 src="http://localhost:8000/manacrypt.png" 
                                 alt="Mana Crypt"
@@ -118,12 +125,42 @@ export const Dashboard: React.FC = () => {
                                 />
                         </div>
                         <div>
+                            <Grid container spacing={2} justifyContent="center" marginTop={3}>
+                                <Grid item>
+                                    <Button variant="contained" 
+                                    onClick={viewInventory}
+                                    sx={{ 
+                                        color: 'white', // Text color
+                                        backgroundColor: 'purple', // Background color
+                                        '&:hover': { // Change color on hover
+                                        backgroundColor: 'gray',
+                                        }
+                                    }}>
+                                        View Inventory
+                                    </Button>
+                                </Grid>
+                                <Grid item>
+                                    <Button variant="contained" 
+                                    onClick={addCards}
+                                    sx={{ 
+                                        color: 'white', // Text color
+                                        backgroundColor: 'purple', // Background color
+                                        '&:hover': { // Change color on hover
+                                        backgroundColor: 'gray',
+                                        }
+                                    }}>
+                                        Add Cards 
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </div>
+                        <div>
                             <Grid container spacing={2} justifyItems='center'>
                                 <Grid item xs={12} sx={{margin: "3% 5% 0% 5%"}}>
                                     <Card sx={{backgroundColor:'#C3BBBB'}} > 
                                         <CardContent>
                                             <Typography variant='h5' gutterBottom> 
-                                                You have 0 cards in your inventory.
+                                                You have {numCards} cards in your inventory.
                                             </Typography>
                                         </CardContent>
                                     </Card>
@@ -132,7 +169,7 @@ export const Dashboard: React.FC = () => {
                                     <Card sx={{backgroundColor:'#C3BBBB'}}> 
                                         <CardContent>
                                             <Typography variant='h5' gutterBottom> 
-                                                Your cards total value at $0.
+                                                Your cards total value at ${value}.
                                             </Typography>
                                         </CardContent>
                                     </Card>
@@ -148,7 +185,6 @@ export const Dashboard: React.FC = () => {
 };
 
 
-
-
-
 export default Dashboard;
+
+

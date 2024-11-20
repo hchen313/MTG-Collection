@@ -1,6 +1,8 @@
 import React, { useState } from 'react'; 
-import { Avatar, Grid, Paper, TextField, FormControlLabel, Checkbox, Button, Link, Typography } from '@mui/material';
+import { Avatar, Grid, Paper, TextField, FormControlLabel, Checkbox, Button, Link, Typography, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import SignUp from './SignUp';
+import ForgetPassword from './ForgetPassword';
 
 export const Login = () => {
     const paperStyle = {
@@ -47,6 +49,7 @@ export const Login = () => {
         }
     }
 
+
     return (
         <Grid> 
             <Paper elevation={20} style={paperStyle}> 
@@ -67,14 +70,10 @@ export const Login = () => {
                 <Button type='submit' color='primary' variant='contained' fullWidth style={{margin: "8px 0"}}
                 onClick={(event) => {handleSubmit(event)}}> Sign in </Button>
                 <Typography>
-                    <Link href="#" onClick={()=>{}}>
-                        Forgot password?
-                    </Link>
+                    <ForgetPassword />
                 </Typography>
                 <Typography> Do you have an account?
-                    <Link href="#" onClick={()=>{}}>
-                        Sign up
-                    </Link>
+                    <SignUp />
                 </Typography>
             </Paper>
         </Grid>
