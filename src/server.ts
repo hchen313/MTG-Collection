@@ -12,29 +12,28 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { collection, addDoc } from "firebase/firestore";
 import { getDatabase, ref, set, get, update, remove, onValue } from "firebase/database";
-import { snapshot } from 'node:test';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
-
+dotenv.config();
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBaDLCLgUVGVQdMqT722GbvAvdYGlqwKfk",
-  authDomain: "mtg-collection-b95ee.firebaseapp.com",
-  databaseURL: "https://mtg-collection-b95ee-default-rtdb.firebaseio.com",
-  projectId: "mtg-collection-b95ee",
-  storageBucket: "mtg-collection-b95ee.firebasestorage.app",
-  messagingSenderId: "296671567368",
-  appId: "1:296671567368:web:5b1cc43eefb0d8dd71fbbd",
-  measurementId: "G-9JS5TPFP8F"
-};
+export const firebaseConfig = {
+    apiKey: process.env.APIKEY, 
+    authDomain: process.env.AUTHDOMAIN, 
+    databaseURL: process.env.DATABASEURL, 
+    projectId: process.env.PROJECTID, 
+    storageBucket: process.env.STORAGEBUCKET, 
+    messagingSenderId: process.env.MESSENGINGSENDERID, 
+    appId: process.env.APPID, 
+    measurementId: process.env.MEASUREMENTID
+  };
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp)
 
 
-dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT;
 const JWT_SECRET: string = process.env.JWT_SECRET || "secret";
